@@ -1,8 +1,8 @@
-## Clashcli
+# Clashcli
 
 A simple command-line client for [Clash](https://github.com/Dreamacro/clash).
 
-Interacts with Clash by its REST API.
+Interacts with Clash using its REST API.
 
 - Select nodes for groups
 - Run latency test for a node
@@ -31,7 +31,7 @@ Environment variables will be overridden by command line arguments, flags and op
 
 Command line:
     clashcli [-h|--help]
-    clashcli [-p <port>] [-a <addr>] [-u <url>] [-e <scheme>] [-s] [-t]
+    clashcli [-p <port>] [-a <addr>] [-u <url>] [-e <scheme>] [-s|-t]
             [<Group1> [<Group2> [<G3> ...]]]
 
   -a string

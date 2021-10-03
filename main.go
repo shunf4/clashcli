@@ -56,7 +56,7 @@ Environment variables will be overridden by command line arguments, flags and op
 
 Command line:
     %[1]s [-h|--help]
-    %[1]s [-p <port>] [-a <addr>] [-u <url>] [-e <scheme>] [-s] [-t]
+    %[1]s [-p <port>] [-a <addr>] [-u <url>] [-e <scheme>] [-s|-t]
             [<Group1> [<Group2> [<G3> ...]]]
 
 `, os.Args[0])

@@ -7,7 +7,7 @@ Interacts with Clash by its REST API.
 - Select nodes for groups
 - Run latency test for a node
 
-#### Help
+### Help
 
 ```
 $ clashcli --help
@@ -46,6 +46,6 @@ Command line:
         Delay test URL
 ```
 
-#### License
+### License
 
 Until otherwise noted, all of clashcli source files are distributed under the terms of MIT License in LICENSE file.

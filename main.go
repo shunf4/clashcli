@@ -458,7 +458,11 @@ func doSelectNode(config *Config) {
 		}
 		fmt.Printf("[Group %s]\n", g)
 		for i, p := range currGroup.All {
-			fmt.Printf("%d.\t%s\n", i, p)
+			nowDesc := ""
+			if p == currGroup.Now {
+				nowDesc = "<Selected> "
+			}
+			fmt.Printf("%d.\t%s%s\n", i, nowDesc, p)
 		}
 		fmt.Printf("\nCurrent group: %s\n", g)
 		nowIndex := -1
@@ -508,7 +512,11 @@ func doDelayTest(config *Config) {
 	}
 	fmt.Printf("[Group %s]\n", g)
 	for i, p := range currGroup.All {
-		fmt.Printf("%d.\t%s\n", i, p)
+		nowDesc := ""
+		if p == currGroup.Now {
+			nowDesc = "<Selected> "
+		}
+		fmt.Printf("%d.\t%s%s\n", i, nowDesc, p)
 	}
 
 	userSelected := askUserForNode("\nSelect a node to test", nameToProxyOrGroup, &currGroup, false)

@@ -73,7 +73,7 @@ Command line:
 	var testURLFlag = flag.String("u", "", "Delay test URL")
 	var selectFlag = flag.Bool("s", false, "(Select) Use node select feature. This is the default feature")
 	var delayTestFlag = flag.Bool("t", false, "(delay Test) Use delay test feature. You can specify only 1 proxy group in this case")
-	var shouldDisconnectFlag = flag.Bool("d", false, "Whether to disconnect all connections after selecting a node. (1/True/true/...)")
+	var shouldDisconnectFlag = flag.String("d", "", "Disconnect all connections after selecting a node. (1/True/true/...)")
 
 	flag.Parse()
 
@@ -142,14 +142,8 @@ Command line:
 		feature = FeatureSelect
 	}
 
-	shouldDisconnect := *shouldDisconnectFlag
-	shouldDisconnectFlagSpecified := false
-	flag.Visit(func(f *flag.Flag) {
-		if f.Name == "d" {
-			shouldDisconnectFlagSpecified = true
-		}
-	})
-	if !shouldDisconnectFlagSpecified {
+	shouldDisconnect, err := strconv.ParseBool(*shouldDisconnectFlag)
+	if !shouldDisconnect && err != nil {
 		// Default: false
 		shouldDisconnect, _ = strconv.ParseBool(os.Getenv("CLASH_DISCON_ON_SELECT"))
 	}
@@ -185,6 +179,7 @@ Command line:
     Clash external controller: %s://%s:%s
     Groups: %v
     TestURL: %s
+    ShouldDisconnect: %v
 
 `,
 		scheme,
@@ -192,6 +187,7 @@ Command line:
 		portPrint,
 		groups,
 		testURL,
+		shouldDisconnect,
 	)
 
 	switch feature {

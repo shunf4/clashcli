@@ -28,14 +28,18 @@ Environment variables will be overridden by command line arguments, flags and op
                         commas. E.g. "My Proxy,Video Media,3".
     CLASH_TEST_URL      Delay test URL. Defaults to
                         connectivitycheck.gstatic.com/generate_204 .
+    CLASH_DISCON_ON_SELECT
+                        Whether to disconnect all connections after selecting
+                        a node. (1/True/true/...)
 
 Command line:
     clashcli [-h|--help]
-    clashcli [-p <port>] [-a <addr>] [-u <url>] [-e <scheme>] [-s|-t]
+    clashcli [-p <port>] [-a <addr>] [-u <url>] [-e <scheme>] [-s|-t] [-d]
             [<Group1> [<Group2> [<G3> ...]]]
 
   -a string
         Clash external controller address
+  -d    Whether to disconnect all connections after selecting a node. (1/True/true/...)
   -e string
         Clash external controller scheme
   -p int

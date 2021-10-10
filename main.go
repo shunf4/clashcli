@@ -26,11 +26,12 @@ var in = bufio.NewReader(os.Stdin)
 var log = origLog.New(os.Stderr, "", 0)
 
 type Config struct {
-	Port    *int // Nullable
-	Addr    string
-	Scheme  string
-	Groups  []string
-	TestURL string
+	Port             *int // Nullable
+	Addr             string
+	Scheme           string
+	Groups           []string
+	TestURL          string
+	ShouldDisconnect bool
 }
 
 func main() {
@@ -53,10 +54,13 @@ Environment variables will be overridden by command line arguments, flags and op
                         commas. E.g. "My Proxy,Video Media,3".
     CLASH_TEST_URL      Delay test URL. Defaults to
                         connectivitycheck.gstatic.com/generate_204 .
+    CLASH_DISCON_ON_SELECT
+                        Whether to disconnect all connections after selecting
+                        a node. (1/True/true/...)
 
 Command line:
     %[1]s [-h|--help]
-    %[1]s [-p <port>] [-a <addr>] [-u <url>] [-e <scheme>] [-s|-t]
+    %[1]s [-p <port>] [-a <addr>] [-u <url>] [-e <scheme>] [-s|-t] [-d]
             [<Group1> [<Group2> [<G3> ...]]]
 
 `, os.Args[0])
@@ -69,6 +73,7 @@ Command line:
 	var testURLFlag = flag.String("u", "", "Delay test URL")
 	var selectFlag = flag.Bool("s", false, "(Select) Use node select feature. This is the default feature")
 	var delayTestFlag = flag.Bool("t", false, "(delay Test) Use delay test feature. You can specify only 1 proxy group in this case")
+	var shouldDisconnectFlag = flag.Bool("d", false, "Whether to disconnect all connections after selecting a node. (1/True/true/...)")
 
 	flag.Parse()
 
@@ -137,6 +142,18 @@ Command line:
 		feature = FeatureSelect
 	}
 
+	shouldDisconnect := *shouldDisconnectFlag
+	shouldDisconnectFlagSpecified := false
+	flag.Visit(func(f *flag.Flag) {
+		if f.Name == "d" {
+			shouldDisconnectFlagSpecified = true
+		}
+	})
+	if !shouldDisconnectFlagSpecified {
+		// Default: false
+		shouldDisconnect, _ = strconv.ParseBool(os.Getenv("CLASH_DISCON_ON_SELECT"))
+	}
+
 	groups := flag.Args()
 	if len(groups) == 0 {
 		groupsEnv := strings.Split(os.Getenv("CLASH_GROUPS"), ",")
@@ -150,11 +167,12 @@ Command line:
 	}
 
 	config := Config{
-		Port:    port,
-		Addr:    addr,
-		Scheme:  scheme,
-		Groups:  groups,
-		TestURL: testURL,
+		Port:             port,
+		Addr:             addr,
+		Scheme:           scheme,
+		Groups:           groups,
+		TestURL:          testURL,
+		ShouldDisconnect: shouldDisconnect,
 	}
 
 	portPrint := "<Not decided>"
@@ -356,6 +374,29 @@ func apiDelayTest(baseURL string, proxyName string, testURL string, timeoutMilli
 	}
 }
 
+func apiCloseAllConnections(baseURL string) error {
+	c := apiNewClient()
+
+	req, err := http.NewRequest(
+		http.MethodDelete,
+		baseURL+"/connections",
+		nil,
+	)
+	if err != nil {
+		return err
+	}
+
+	r, err := c.Do(req)
+	if err != nil {
+		return err
+	}
+
+	if r.StatusCode != http.StatusNoContent {
+		return fmt.Errorf("in apiCloseAllConnections, return status should be 204, but got %d", r.StatusCode)
+	}
+	return nil
+}
+
 func mustDecideBaseURL(config *Config) string {
 	port, err := decidePort(config)
 	if err != nil {
@@ -448,6 +489,7 @@ func doSelectNode(config *Config) {
 	}
 	validInputGroupNames := mustGetNonEmptyValidGroupNames(config, groups, nameToProxyOrGroup)
 
+	selectionCount := 0
 	for _, g := range validInputGroupNames {
 		currGroup, ok := nameToProxyOrGroup[g]
 		if !ok {
@@ -477,6 +519,7 @@ func doSelectNode(config *Config) {
 		userSelected := askUserForNode("Select a node", nameToProxyOrGroup, &currGroup, true)
 		if userSelected == "" {
 			fmt.Println("Not selecting for this group.")
+			fmt.Println()
 			continue
 		}
 
@@ -488,6 +531,18 @@ func doSelectNode(config *Config) {
 			return
 		}
 		fmt.Println("OK")
+		fmt.Println()
+		selectionCount += 1
+	}
+
+	if config.ShouldDisconnect && selectionCount > 0 {
+		fmt.Printf("Disconnecting all connections...")
+		err := apiCloseAllConnections(baseURL)
+		if err != nil {
+			fmt.Printf("FAIL: %s\n", err.Error())
+		} else {
+			fmt.Println("OK")
+		}
 		fmt.Println()
 	}
 }
@@ -502,8 +557,6 @@ func doDelayTest(config *Config) {
 	if len(validInputGroupNames) > 1 {
 		fmt.Println("Only one group allowed when you are doing delay test. Picking the first one")
 	}
-
-	fmt.Println()
 
 	g := validInputGroupNames[0]
 	currGroup, ok := nameToProxyOrGroup[g]

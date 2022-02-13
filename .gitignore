@@ -6,12 +6,15 @@
 *.dylib
 bin/*
 !bin/linux/
+!bin/linux-arm64/
 !bin/darwin/
 !bin/windows/
 bin/linux/*
+bin/linux-arm64/*
 bin/darwin/*
 bin/windows/*
 !bin/linux/.gitkeep
+!bin/linux-arm64/.gitkeep
 !bin/darwin/.gitkeep
 !bin/windows/.gitkeep
 

@@ -253,7 +253,7 @@ func decidePort(config *Config) (int, error) {
 		}
 
 		v, ok := m["hello"]
-		if !ok || v != "clash" {
+		if !ok || (v != "clash" && v != "mihomo") {
 			fmt.Printf("FAIL: not a Clash controller instance\n")
 			continue
 		}
